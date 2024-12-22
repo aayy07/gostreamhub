@@ -1,18 +1,26 @@
 package processing
 
 import (
-	"log"
-	"strings"
+    "log"
+    "gostreamhub/internal/storage"
 )
 
-// ProcessData handles data transformation and forwards the results to the output channel.
-func ProcessData(input <-chan string, output chan<- string) {
-	for msg := range input {
-		// Example transformation: Convert the message to uppercase
-		processed := strings.ToUpper(msg)
-		log.Printf("Processing data: %s -> %s", msg, processed)
-		output <- processed
-	}
+// ProcessData handles data transformation, forwards results to the output channel, and saves processed data to the database
+func ProcessData(input <-chan string, output chan<- string, dbStorage *storage.DBStorage) {
+    for data := range input {
+        log.Printf("Processing data: %s", data)
+
+        // Process the data (this is just a placeholder for actual transformation logic)
+        processedData := "Processed: " + data
+
+        // Save processed data to the database
+        if err := dbStorage.SaveProcessedData(data, processedData); err != nil {
+            log.Printf("Failed to save data: %v", err)
+        }
+
+        // Send the processed data to the output channel
+        output <- processedData
+    }
 }
 
 
