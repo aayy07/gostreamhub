@@ -1,42 +1,46 @@
 package main
 
 import (
-	"fmt"
-	"gostreamhub/internal/ingestion"
-	"gostreamhub/internal/processing"
-	"log"
-	"net/http"
+    "fmt"
+    "log"
+    "net/http"
+    "gostreamhub/internal/ingestion"
+    "gostreamhub/internal/processing"
+    "gostreamhub/internal/storage"
 )
 
 func main() {
-	// Create channels for communication
-	inputChannel := make(chan string)
-	outputChannel := make(chan string)
+    // Database configuration from environment or config file
+    dbHost := "aayy07-db-aayy07.l.aivencloud.com"
+    dbPort := "26366"
+    dbUser := "avnadmin"
+    dbPassword := "AVNS__knE3kZdUowOffhwGtn"
+    dbName := "defaultdb"
+    caCertPath := "C:\\Go-Workspace\\src\\ca.pem" // Path to your CA file
 
-	// Start the processing pipeline
-	go processing.ProcessData(inputChannel, outputChannel)
+    // Initialize database connection
+    dbStorage, err := storage.NewDBStorage(dbHost, dbPort, dbUser, dbPassword, dbName, caCertPath)
+    if err != nil {
+        log.Fatalf("Failed to connect to the database: %v", err)
+    }
 
-	// Log processed data for demonstration
-	go func() {
-		for processed := range outputChannel {
-			log.Printf("Processed Data Ready for Output: %s", processed)
-		}
-	}()
+    // Create channels for communication
+    inputChannel := make(chan string)
+    outputChannel := make(chan string)
 
-	// Set up the HTTP ingestion endpoint
-	http.HandleFunc("/ingest", ingestion.HTTPIngest(inputChannel))
+    // Start the processing pipeline
+    go processing.ProcessData(inputChannel, outputChannel, dbStorage)
 
-	fmt.Println("Server is running on port 8080...")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+    // Log processed data for demonstration
+    go func() {
+        for processed := range outputChannel {
+            log.Printf("Processed Data Ready for Output: %s", processed)
+        }
+    }()
+
+    // Set up the HTTP ingestion endpoint
+    http.HandleFunc("/ingest", ingestion.HTTPIngest(inputChannel))
+
+    fmt.Println("Server is running on port 8080...")
+    log.Fatal(http.ListenAndServe(":8080", nil))
 }
-
-
-// Logic
-// The main.go file ties everything together. It initializes the application, sets up channels, starts the processing pipeline, and serves the HTTP endpoint.
-
-// Explanation
-// Channels:
-// inputChannel: Receives raw data from ingestion.
-// outputChannel: Collects processed data from the pipeline.
-// Processing Pipeline: Runs in a goroutine to continuously process data.
-// HTTP Server: Serves the /ingest endpoint for receiving data.

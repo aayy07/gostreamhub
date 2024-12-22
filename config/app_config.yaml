@@ -1,0 +1,8 @@
+database:
+  host: "aayy07-db-aayy07.l.aivencloud.com"
+  port: 26366
+  user: "avnadmin"
+  password: "AVNS__knE3kZdUowOffhwGtn"
+  dbname: "defaultdb"
+  sslmode: "require"
+  caCertPath: "C:\\Go-Workspace\\src\\ca.pem"
